@@ -44,3 +44,41 @@ toursRouter.post('/', async (req, res, next) => {
     next(error);
   }
 });
+
+toursRouter.delete('/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new Error('El id del tour no es válido');
+    }
+
+    const { data: existingTour, error: findError } = await supabase
+      .from('tour')
+      .select('id, nombre')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (findError) throw new Error(findError.message);
+
+    if (!existingTour) {
+      return res.status(404).json({
+        error: 'El tour no existe',
+      });
+    }
+
+    const { error: deleteError } = await supabase
+      .from('tour')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) throw new Error(deleteError.message);
+
+    res.json({
+      message: 'Tour eliminado correctamente',
+      tour: existingTour,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
