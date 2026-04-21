@@ -10,10 +10,29 @@ import { errorHandler } from './middleware/error-handler.js';
 
 export const app = express();
 
-app.use(cors({
-  origin: [env.FRONTEND_URL],
-  credentials: false,
-}));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://front-tour.vercel.app',
+];
+
+if (env.FRONTEND_URL && !allowedOrigins.includes(env.FRONTEND_URL)) {
+  allowedOrigins.push(env.FRONTEND_URL);
+}
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    },
+    credentials: false,
+  })
+);
 
 app.use(express.json());
 
